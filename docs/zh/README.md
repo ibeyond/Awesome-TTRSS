@@ -18,7 +18,7 @@
 
 推荐使用一台 VPS 来部署您的 Awesome TTRSS 实例，[DigitalOcean](https://m.do.co/c/d6ef3c80105c) 提供高性价比的 VPS 仅需 \$5/月。除此之外，通过 Awesome TTRSS 的 [💰OpenCollective 页面](https://opencollective.com/Awesome-TTRSS/) 进行赞助，即可获得定制支持，全托管服务，全托管 VPS 等私人服务。
 
-Awesome TTRSS 支持 <Badge text="arm32v7 ✓" vertical="middle" type="tip"/> 架构（暂不包括 OpenCC API）。请参见 [docker-compose.arm32v7.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.arm32v7.yml)。
+Awesome TTRSS 支持多架构 <Badge text="x86 ✓" vertical="top" type="tip"/><Badge text="arm32v7 ✓" vertical="top" type="tip"/><Badge text="arm64v8 ✓" vertical="top" type="tip"/>（暂不包括 OpenCC API）。
 
 ### 通过 Docker 部署
 
@@ -38,10 +38,10 @@ docker run -it --name ttrss --restart=always \
 
 [docker-compose.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.yml) 包含了 4 个镜像:
 
-1. [TTRSS](https://hub.docker.com/r/wangqiru/ttrss) <Badge text="arm32v7 ✓" vertical="top" type="tip"/>
-1. [PostgreSQL](https://hub.docker.com/r/sameersbn/postgresql) <Badge text="arm32v7 ✓" vertical="top" type="tip"/>
-1. [Mercury Parser API](https://hub.docker.com/r/wangqiru/mercury-parser-api) <Badge text="arm32v7 ✓" vertical="top" type="tip"/>
-1. [OpenCC API](https://hub.docker.com/r/wangqiru/opencc-api-server) <Badge text="arm32v7 ✗" vertical="top" type="error"/>
+1. [TTRSS](https://hub.docker.com/r/wangqiru/ttrss)
+1. [PostgreSQL](https://hub.docker.com/_/postgres)
+1. [Mercury Parser API](https://hub.docker.com/r/wangqiru/mercury-parser-api)
+1. [OpenCC API](https://hub.docker.com/r/wangqiru/opencc-api-server) <Badge text="arm32v7 ✗" vertical="top" type="error"/><Badge text="arm64v8 ✗" vertical="top" type="error"/>
 
 #### 步骤
 
@@ -59,7 +59,7 @@ docker run -it --name ttrss --restart=always \
 - DB_NAME: 数据库名字
 - DB_USER: 数据库用户名
 - DB_PASS: 数据库密码
-- ENABLE_PLUGINS: 在系统层面启用的插件名称，其中 `auth_internal` 为必须启用的登录插件
+- ENABLE_PLUGINS: 全局启用的插件名称，其中 `auth_internal` 为必须启用的登录插件
 - SESSION_COOKIE_LIFETIME: 使用网页版登陆时 cookie 过期时间，单位为小时，默认为 `24` 小时
 - HTTP_PROXY: `ip:port`, TTRSS 实例的全局代理, 为源地址添加单独代理请使用 [Options per Feed](#options-per-feed)
 - SINGLE_USER_MODE: `true` 为开启单用户模式，同时关闭用户认证，无需登录即可使用。**请仅在安全环境下开启**
@@ -116,7 +116,7 @@ server {
 
 Awesome TTRSS 会自动监控 TTRSS 官方更新并与之同步，这意味着更新会比较频繁。
 
-默认使用 `wangqiru/ttrss:latest` 版本，该版本包含了 [TTRSS 官方](https://git.tt-rss.org/fox/tt-rss/releases)的稳定发行版。 `wangqiru/ttrss:nightly` 包含了含有最新功能的尝鲜版，但可能包含 bug。旧版本请参照 [此页面](https://hub.docker.com/r/wangqiru/ttrss/tags)。
+[TTRSS 官方不再释出 tag](https://community.tt-rss.org/t/versioning-changes-for-trunk/2974)。 `wangqiru/ttrss:latest` 会与[官方 master branch](https://git.tt-rss.org/fox/tt-rss) 同步。
 
 ### 手动更新
 
@@ -202,8 +202,6 @@ sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需
 
 提供 Fever API 支持。
 
-**该插件默认作为系统插件启用。**
-
 #### 设置步骤
 
 1. 在设置中启用 API。
@@ -213,7 +211,7 @@ sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需
 1. 在支持 Fever 的阅读器用，使用 `https://[您的地址]/plugins/fever` 作为服务器地址。使用您的账号和步骤 2 中的密码登录。
 1. 由于该插件使用未加盐的 MD5 加密密码进行通信，强烈建议[开启 HTTPS](#配置-https)。
 
-### [OpenCC 繁简转换](https://github.com/HenryQW/ttrss_opencc)
+### [OpenCC 繁简转换](https://github.com/HenryQW/ttrss_opencc) <Badge text="arm32v7 ✗" vertical="top" type="error"/><Badge text="arm64v8 ✗" vertical="top" type="error"/>
 
 使用 [OpenCC](https://github.com/BYVoid/OpenCC) 为 TTRSS 提供中文繁转简的插件，需要配合单独的 OpenCC API 服务器使用。[样例 docker-compose](#通过-docker-compose-部署) 中已经包含了 [HenryQW/OpenCC.henry.wang](https://github.com/HenryQW/OpenCC.henry.wang) 服务器。
 
@@ -254,6 +252,21 @@ Demo 服务器，可用性不做任何保证：[https://opencc.henry.wang](https
 
 使用指南见 [Options per Feed](https://github.com/sergey-dryabzhinsky/options_per_feed)。
 
+### [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-iframe-sandbox)
+
+::: warning 注意
+
+该插件与 `Fever API` 不能同时作为全局插件启用。如果您同时需要两者：
+
+1. 在环境变量 `ENABLE_PLUGINS` 中移除 `fever` 并添加 `remove_iframe_sandbox` 作为全局插件启用。
+1. 在登陆 TTRSS 后，通过设置将 `Fever API` 作为本地插件启用。
+
+:::
+
+移除 iframe 上的 sandbox 属性，以支持 feed 中直接播放嵌入视频。
+
+使用指南见 [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-iframe-sandbox)。
+
 ## 主题
 
 ### [Feedly](https://github.com/levito/tt-rss-feedly-theme)
@@ -275,6 +288,7 @@ Demo 服务器，可用性不做任何保证：[https://opencc.henry.wang](https
 - 通过 Awesome TTRSS 的 [💰OpenCollective 页面](https://opencollective.com/Awesome-TTRSS/) 进行赞助，即可获得私人定制支持。
 - 阅读此[指南](https://henry.wang/2018/04/25/ttrss-docker-plugins-guide.html)可能会有帮助。
 - 通过 [GitHub issue](https://github.com/HenryQW/Awesome-TTRSS/issues) 提交问题。
+- [直接捐助支持](https://tt-rss.org/)。
 
 ## 捐赠
 

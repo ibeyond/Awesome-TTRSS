@@ -18,7 +18,7 @@
 
 A VPS is highly recommended to host your Awesome TTRSS instance, a VPS can be obtained from as little as \$5/month at [DigitalOcean](https://m.do.co/c/d6ef3c80105c). Alternatively, you may request for personalized support, fully-managed service or fully-managed VPS via sponsoring Awesome TTRSS on its [💰OpenCollective page](https://opencollective.com/Awesome-TTRSS/).
 
-Awesome TTRSS provides support for the <Badge text="arm32v7 ✓" vertical="middle" type="tip"/> architecture, except the OpenCC API. Please see [docker-compose.arm32v7.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.arm32v7.yml).
+Awesome TTRSS supports multiple architectures <Badge text="x86 ✓" vertical="top" type="tip"/><Badge text="arm32v7 ✓" vertical="top" type="tip"/><Badge text="arm64v8 ✓" vertical="top" type="tip"/>, except the OpenCC API.
 
 ### Deployment via docker
 
@@ -38,10 +38,10 @@ docker run -it --name ttrss --restart=always \
 
 [docker-compose.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.yml) include 4 docker images:
 
-1. [TTRSS](https://hub.docker.com/r/wangqiru/ttrss) <Badge text="arm32v7 ✓" vertical="top" type="tip"/>
-1. [PostgreSQL](https://hub.docker.com/r/sameersbn/postgresql) <Badge text="arm32v7 ✓" vertical="top" type="tip"/>
-1. [Mercury Parser API](https://hub.docker.com/r/wangqiru/mercury-parser-api) <Badge text="arm32v7 ✓" vertical="top" type="tip"/>
-1. [OpenCC API](https://hub.docker.com/r/wangqiru/opencc-api-server) <Badge text="arm32v7 ✗" vertical="top" type="error"/>
+1. [TTRSS](https://hub.docker.com/r/wangqiru/ttrss)
+1. [PostgreSQL](https://hub.docker.com/_/postgres)
+1. [Mercury Parser API](https://hub.docker.com/r/wangqiru/mercury-parser-api)
+1. [OpenCC API](https://hub.docker.com/r/wangqiru/opencc-api-server) <Badge text="arm32v7 ✗" vertical="top" type="error"/><Badge text="arm64v8 ✗" vertical="top" type="error"/>
 
 #### Steps
 
@@ -59,7 +59,7 @@ docker run -it --name ttrss --restart=always \
 - DB_NAME: the name of your database
 - DB_USER: the user of your database
 - DB_PASS: the password of your database
-- ENABLE_PLUGINS: the plugins you'd like to enable at system level, note that `auth_internal` is required
+- ENABLE_PLUGINS: the plugins you'd like to enable as global plugins, note that `auth_internal` is required
 - SESSION_COOKIE_LIFETIME: the expiry time for your login session cookie in hours, default to `24` hours
 - HTTP_PROXY: `ip:port`, the global proxy for your TTRSS instance, to set proxy on a per feed basis, use [Options per Feed](#options-per-feed)
 - SINGLE_USER_MODE: `true` will enable single user mode and disable user authentication, which means login will not be required. **Please only enable this under a secure environment**
@@ -116,7 +116,7 @@ server {
 
 Awesome TTRSS automatically keeps up with TTRSS by mirroring the official releases, this means update can be issued frequently.
 
-By default `wangqiru/ttrss:latest` version is used, which contains the stable release from [the official TTRSS repository](https://git.tt-rss.org/fox/tt-rss/releases). `wangqiru/ttrss:nightly` is also available if you want to try out the latest features, however this may contain bugs. For older versions, please check [this page](https://hub.docker.com/r/wangqiru/ttrss/tags).
+[TTRSS stopped releasing tags](https://community.tt-rss.org/t/versioning-changes-for-trunk/2974). `wangqiru/ttrss:latest` will sync with [TTRSS' master branch](https://git.tt-rss.org/fox/tt-rss) periodically.
 
 ### Manual Update
 
@@ -202,8 +202,6 @@ Fetch fulltext of articles via a self-hosted Mercury Parser API. A separate Merc
 
 Provide Fever API simulate.
 
-**Plugin is enabled as a system plugin by default.**
-
 #### Steps
 
 1. Enable API in preference
@@ -213,7 +211,7 @@ Provide Fever API simulate.
 1. In supported RSS readers, use `https://[your url]/plugins/fever` as the target server address, with your account and the password set in Step 2.
 1. The plugin communicates with TTRSS using an unsalted MD5 hash, [using HTTPS](#configure-https) is strongly recommended.
 
-### [OpenCC Simp-Trad Chinese Conversion](https://github.com/HenryQW/ttrss_opencc)
+### [OpenCC Simp-Trad Chinese Conversion](https://github.com/HenryQW/ttrss_opencc) <Badge text="arm32v7 ✗" vertical="top" type="error"/><Badge text="arm64v8 ✗" vertical="top" type="error"/>
 
 Conversion between Traditional and Simplified Chinese via [OpenCC](https://github.com/BYVoid/OpenCC) , a separate [OpenCC API Server](https://github.com/HenryQW/OpenCC.henry.wang) is required. the example [docker-compose](#deployment-via-docker-compose) has already included [such a server](https://github.com/HenryQW/OpenCC.henry.wang).
 
@@ -254,6 +252,23 @@ Provide the ability to configure proxy, user-agent and SSL certificate verificat
 
 Refer to [Options per Feed](https://github.com/sergey-dryabzhinsky/options_per_feed) for more details.
 
+### [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-iframe-sandbox)
+
+::: warning
+
+If you are getting data via fever api, enable it by adding `remove_iframe_sandbox` to the environment variable **ENABLE_PLUGINS**.
+
+This plugin cannot be enabled in conjunction with `Fever API` as global plugins, if you require both plugins:
+
+1. In `ENABLE_PLUGINS` replace `fever` with `remove_iframe_sandbox` to enable this as a global plugin.
+1. Enable `Fever API` in the TTRSS preferences panel after login, as a local plugin.
+
+:::
+
+Remove the sandbox attribute on iframes, thus enabling playback of embedded video in feeds.
+
+Refer to [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-iframe-sandbox)。
+
 ## Themes
 
 ### [Feedly](https://github.com/levito/tt-rss-feedly-theme)
@@ -276,6 +291,7 @@ Refer to [Options per Feed](https://github.com/sergey-dryabzhinsky/options_per_f
 - You may request for personalized support via sponsoring Awesome TTRSS on its [💰OpenCollective page](https://opencollective.com/Awesome-TTRSS/).
 - Read [this guide](https://henry.wang/2018/04/25/ttrss-docker-plugins-guide.html) might help.
 - Open an issue via [GitHub issue](https://github.com/HenryQW/Awesome-TTRSS/issues).
+- [Direct donation to TTRSS](https://tt-rss.org/).
 
 ## Donation
 

@@ -11,7 +11,7 @@ $config['DB_PORT'] = env('DB_PORT', 5432);
 $config['DB_NAME'] = env('DB_NAME', 'ttrss');
 $config['DB_USER'] = env('DB_USER');
 $config['DB_PASS'] = env('DB_PASS');
-$config['PLUGINS'] = env('ENABLE_PLUGINS', 'auth_internal,fever');
+$config['PLUGINS'] = env('ENABLE_PLUGINS', 'auth_internal');
 $config['SESSION_COOKIE_LIFETIME'] = env('SESSION_COOKIE_LIFETIME', 24) * 3600;
 $config['SINGLE_USER_MODE'] = env('SINGLE_USER_MODE', false);
 
@@ -84,7 +84,7 @@ function error($text)
 function dbconnect($config)
 {
     $map = array('host' => 'HOST', 'port' => 'PORT');
-    $dsn = 'pgsql:';
+    $dsn = 'pgsql:dbname=postgres;';
     foreach ($map as $d => $h) {
         if (isset($config['DB_' . $h])) {
             $dsn .= $d . '=' . $config['DB_' . $h] . ';';
@@ -102,6 +102,7 @@ function dbcheckconn($config)
         return true;
     }
     catch (PDOException $e) {
+        echo $e;
         return false;
     }
 }
