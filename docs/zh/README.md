@@ -53,7 +53,7 @@ docker run -it --name ttrss --restart=always \
 
 ### 支持的环境变量列表
 
-- SELF_URL_PATH: TTRSS 实例地址
+- SELF_URL_PATH: TTRSS 实例地址。**🔴 请注意，该变量值必须与你在浏览器中用于访问 TTRSS 的 URL 保持完全一致，否则 TTRSS 将无法启动。**
 - DB_HOST: 数据库地址
 - DB_PORT: 数据库端口
 - DB_NAME: 数据库名字
@@ -112,6 +112,8 @@ server {
 }
 ```
 
+**🔴 请注意， [你需要更新 `SELF_URL_PATH` 环境变量。](#supported-environment-variables)**
+
 ## 更新
 
 Awesome TTRSS 会自动监控 TTRSS 官方更新并与之同步，这意味着更新会比较频繁。
@@ -168,7 +170,7 @@ sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需
    ```bash
    docker-compose stop
    ```
-1. 移动 Postgres 数据卷 `~/postgres/data/`（或者你在 docker-compose 中指定的目录）至其他任何地方作为备份，这非常重要！
+1. 复制 Postgres 数据卷 `~/postgres/data/`（或者你在 docker-compose 中指定的目录）至其他任何地方作为备份，这非常重要！
 1. 执行如下命令来导出所有数据：
    ```bash
    docker exec postgres pg_dumpall -c -U postgres > export.sql
