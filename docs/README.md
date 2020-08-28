@@ -63,7 +63,8 @@ docker run -it --name ttrss --restart=always \
 - SESSION_COOKIE_LIFETIME: the expiry time in hours for your login session cookie in hours, default to `24` hours
 - HTTP_PROXY: `ip:port`, the global proxy for your TTRSS instance, to set proxy on a per feed basis, use [Options per Feed](#options-per-feed)
 - SINGLE_USER_MODE: `true` will enable single user mode and disable user authentication, which means login will not be required. **Please only enable this under a secure environment**
-- LOG_DESTINATION: error log destination to use, either `sql` (uses internal logging you can read in Preferences -> System), or `syslog`
+- LOG_DESTINATION: error log destination to use, `sql` uses internal logging that can be read in Preferences -> System, `syslog` uses system log, blank value uses PHP logging. default to `sql`
+- FEED_LOG_QUIET: `true` will disable the printing of feed updating logs
 
 ### Configure HTTPS
 
@@ -111,6 +112,31 @@ server {
         proxy_temp_file_write_size  64k;
     }
 }
+```
+
+If you want to place TTRSS under a subdirectory, such as `https://mydomain.com/ttrss`, please refer to the following：
+
+```nginx
+    location /ttrss/ {
+        rewrite /ttrss/(.*) /$1 break;
+        proxy_redirect https://$http_host https://$http_host/ttrss;
+        proxy_pass http://ttrssdev;
+
+        proxy_set_header  Host                $http_host;
+        proxy_set_header  X-Real-IP           $remote_addr;
+        proxy_set_header  X-Forwarded-Ssl     on;
+        proxy_set_header  X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto   $scheme;
+        proxy_set_header  X-Frame-Options     SAMEORIGIN;
+
+        client_max_body_size        100m;
+        client_body_buffer_size     128k;
+
+        proxy_buffer_size           4k;
+        proxy_buffers               4 32k;
+        proxy_busy_buffers_size     64k;
+        proxy_temp_file_write_size  64k;
+    }
 ```
 
 **🔴 Please note that [the value in you `SELF_URL_PATH` should be changed as well.](#supported-environment-variables)**
@@ -199,7 +225,13 @@ Fetch fulltext of articles via a self-hosted Mercury Parser API. A separate Merc
 1. Enable `mercury-fulltext` plugin in preference
    ![enable Mercury](https://share.henry.wang/92AGp5/x9xYB93cnX+)
 1. Enter Mercury Parser API endpoint
-   ![enter Mercury Parser API endpoint](https://share.henry.wang/KFrzMD/O2xonuy9ta+)
+   ![enter Mercury Parser API endpoint](https://share.henry.wang/9HJemY/BlTnDhuUGC+)
+
+Use `service.mercury:3000` for Mercury instance deployed via Awesome-TTRSS.
+
+#### Extraction Button
+
+<img src="https://share.henry.wang/ubHtDz/uxyKk68jqY+" width="400">
 
 ### [Fever API](https://github.com/HenryQW/tinytinyrss-fever-plugin)
 
@@ -223,9 +255,13 @@ Conversion between Traditional and Simplified Chinese via [OpenCC](https://githu
 1. Enable `opencc` plugin in preference
    ![enable opencc](https://share.henry.wang/EvN5Nl/2RHNnMV2iP+)
 1. Enter OpenCC API endpoint
-   ![enter OpenCC API endpoint](https://share.henry.wang/JdJeUB/vIsRBk3EXn+)
+   ![enter OpenCC API endpoint](https://share.henry.wang/pePHAz/oWXX3I18hW+)
 
-Demo instances, availability is not guaranteed: [https://opencc.henry.wang](https://opencc.henry.wang) or [http://opencc2.henry.wang](http://opencc2.henry.wang).
+Use `service.opencc:3000` for OpenCC instance deployed via Awesome-TTRSS.
+
+#### Conversion Button
+
+<img src="https://share.henry.wang/30kbTr/lSaHKXk5NT+" width="400">
 
 ### [FeedReader API](https://github.com/jangernert/FeedReader/tree/master/data/tt-rss-feedreader-plugin)
 
@@ -272,6 +308,12 @@ Remove the sandbox attribute on iframes, thus enabling playback of embedded vide
 
 Refer to [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-iframe-sandbox)。
 
+### [Wallabag v2](https://github.com/joshp23/ttrss-to-wallabag-v2)
+
+Save articles to Wallabag.
+
+Refer to [Wallabag v2](https://github.com/joshp23/ttrss-to-wallabag-v2)。
+
 ## Themes
 
 ### [Feedly](https://github.com/levito/tt-rss-feedly-theme)
@@ -306,4 +348,4 @@ Refer to [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-i
 
 MIT
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHenryQW%2FAwesome TTRSS.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHenryQW%2FAwesome TTRSS?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHenryQW%2FAwesome-TTRSS.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHenryQW%2FAwesome-TTRSS?ref=badge_large)

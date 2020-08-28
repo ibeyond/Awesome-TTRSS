@@ -6,7 +6,8 @@ $confpath = '/var/www/config.php';
 $config = array();
 
 $config['SELF_URL_PATH'] = env('SELF_URL_PATH', 'http://localhost');
-$config['DB_HOST'] = env('DB_HOST', 'postgres');
+$config['DB_TYPE'] = 'pgsql';
+$config['DB_HOST'] = env('DB_HOST', 'database.postgres');
 $config['DB_PORT'] = env('DB_PORT', 5432);
 $config['DB_NAME'] = env('DB_NAME', 'ttrss');
 $config['DB_USER'] = env('DB_USER');
@@ -15,6 +16,17 @@ $config['PLUGINS'] = env('ENABLE_PLUGINS', 'auth_internal');
 $config['SESSION_COOKIE_LIFETIME'] = env('SESSION_COOKIE_LIFETIME', 24) * 3600;
 $config['SINGLE_USER_MODE'] = env('SINGLE_USER_MODE', false);
 $config['LOG_DESTINATION'] = env('LOG_DESTINATION', 'sql');
+$config['FEED_LOG_QUIET'] = env('FEED_LOG_QUIET', false);
+
+$log_daemon = '/etc/s6/update-daemon/run';
+
+if($config['FEED_LOG_QUIET'] === "true"){
+    $str = preg_replace('/.php$/m', '.php --quiet', file_get_contents($log_daemon));
+} else {
+    $str = preg_replace('/.php --quiet$/m', '.php', file_get_contents($log_daemon));
+}
+
+file_put_contents($log_daemon, $str);
 
 if(dbcheckconn($config)){
     $pdo = dbconnect($config);

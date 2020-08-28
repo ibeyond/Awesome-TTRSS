@@ -36,7 +36,7 @@ docker run -it --name ttrss --restart=always \
 
 ### 通过 docker-compose 部署
 
-[docker-compose.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.yml) 包含了 4 个镜像:
+[docker-compose.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.yml) 包含了 4 个镜像：
 
 1. [TTRSS](https://hub.docker.com/r/wangqiru/ttrss)
 1. [PostgreSQL](https://hub.docker.com/_/postgres)
@@ -61,8 +61,10 @@ docker run -it --name ttrss --restart=always \
 - DB_PASS: 数据库密码
 - ENABLE_PLUGINS: 全局启用的插件名称，其中 `auth_internal` 为必须启用的登录插件
 - SESSION_COOKIE_LIFETIME: 使用网页版登陆时 cookie 过期时间，单位为小时，默认为 `24` 小时
-- HTTP_PROXY: `ip:port`, TTRSS 实例的全局代理, 为源地址添加单独代理请使用 [Options per Feed](#options-per-feed)
+- HTTP_PROXY: `ip:port`, TTRSS 实例的全局代理，为源地址添加单独代理请使用 [Options per Feed](#options-per-feed)
 - SINGLE_USER_MODE: `true` 为开启单用户模式，同时关闭用户认证，无需登录即可使用。**请仅在安全环境下开启**
+- LOG_DESTINATION: 日志路径，`sql` 日志存入数据库，可在 偏好设置 --> 系统 中查看，`syslog` 日志存入系统日志，空值为使用 PHP 日志。默认为 `sql`
+- FEED_LOG_QUIET: `true` 禁用订阅源更新所产生的日志打印
 
 ### 配置 HTTPS
 
@@ -112,17 +114,42 @@ server {
 }
 ```
 
+如果你想启用子目录，`https://mydomain.com/ttrss`，请参考如下配置：
+
+```nginx
+    location /ttrss/ {
+        rewrite /ttrss/(.*) $1 break
+        proxy_redirect https://$http_host https://$http_host/ttrss
+        proxy_pass http://ttrssdev;
+
+        proxy_set_header  Host                $http_host;
+        proxy_set_header  X-Real-IP           $remote_addr;
+        proxy_set_header  X-Forwarded-Ssl     on;
+        proxy_set_header  X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto   $scheme;
+        proxy_set_header  X-Frame-Options     SAMEORIGIN;
+
+        client_max_body_size        100m;
+        client_body_buffer_size     128k;
+
+        proxy_buffer_size           4k;
+        proxy_buffers               4 32k;
+        proxy_busy_buffers_size     64k;
+        proxy_temp_file_write_size  64k;
+    }
+```
+
 **🔴 请注意， [你需要更新 `SELF_URL_PATH` 环境变量。](#supported-environment-variables)**
 
 ## 更新
 
 Awesome TTRSS 会自动监控 TTRSS 官方更新并与之同步，这意味着更新会比较频繁。
 
-[TTRSS 官方不再释出 tag](https://community.tt-rss.org/t/versioning-changes-for-trunk/2974)。 `wangqiru/ttrss:latest` 会与[官方 master branch](https://git.tt-rss.org/fox/tt-rss) 同步。
+[TTRSS 官方不再释出 tag](https://community.tt-rss.org/t/versioning-changes-for-trunk/2974)。 `wangqiru/ttrss:latest` 会与 [官方 master branch](https://git.tt-rss.org/fox/tt-rss) 同步。
 
 ### 手动更新
 
-通过以下命令进行手动更新:
+通过以下命令进行手动更新：
 
 ```bash
     docker pull wangqiru/ttrss:latest
@@ -133,7 +160,7 @@ Awesome TTRSS 会自动监控 TTRSS 官方更新并与之同步，这意味着�
 
 ### 自动更新
 
-[样例 docker-compose](#通过-docker-compose-部署) 中包含了 [Watchtower](https://github.com/containrrr/watchtower)，它会自动拉取并更新您所有的服务容器 (包括当前系统上运行的非 Awesome TTRSS 服务的容器）。该服务默认关闭，**启用前请确认它将不会影响您其他的服务容器。**
+[样例 docker-compose](#通过-docker-compose-部署） 中包含了 [Watchtower](https://github.com/containrrr/watchtower)，它会自动拉取并更新您所有的服务容器 （包括当前系统上运行的非 Awesome TTRSS 服务的容器）。该服务默认关闭，**启用前请确认它将不会影响您其他的服务容器。**
 
 您也可以设置 watchtower 忽略您的其他容器：
 
@@ -157,10 +184,10 @@ service.mercury:
 
 从 sameersbn/postgresql 迁移至 postgres:alpine。
 
-| 容器镜像      | sameersbn/postgresql | postgres:alpine             |
-| ------------- | -------------------- | --------------------------- |
-| Postgres 版本 | 10.2                 | latest (文档更新时为 12.1 ) |
-| 大小          | 176MB                | 72.8MB                      |
+| 容器镜像      | sameersbn/postgresql | postgres:alpine              |
+| ------------- | -------------------- | ---------------------------- |
+| Postgres 版本 | 10.2                 | latest （文档更新时为 12.1 ) |
+| 大小          | 176MB                | 72.8MB                       |
 
 sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需要通过它来开启，迁移至 postgres:alpine 可以让 Awesome TTRSS 获得 Postgres 的最新更新，以及节约超过 100MB 的部署空间。
 
@@ -175,7 +202,7 @@ sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需
    ```bash
    docker exec postgres pg_dumpall -c -U 数据库用户名 > export.sql
    ```
-1. 根据最新 [docker-compose.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.yml) 中的`database.postgres` 部份来更新你的 docker-compose 文件（**注意 `DB_NAME` 不可更改**），并启动:
+1. 根据最新 [docker-compose.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.yml) 中的`database.postgres` 部份来更新你的 docker-compose 文件（**注意 `DB_NAME` 不可更改**），并启动：
    ```bash
    docker-compose up -d
    ```
@@ -185,20 +212,26 @@ sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需
    ```
 1. 测试所有服务是否正常工作，现在你可以移除步骤二中的备份了。
 
-旧版 docker-compose 文件已经被[归档为 docker-compose.legacy.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.legacy.yml)。
+旧版 docker-compose 文件已经被 [归档为 docker-compose.legacy.yml](https://github.com/HenryQW/Awesome-TTRSS/blob/master/docker-compose.legacy.yml)。
 
 ## 插件
 
 ### [Mercury 全文获取](https://github.com/HenryQW/mercury_fulltext)
 
-全文内容提取插件，配合单独的 Mercury Parser API 服务器使用。[样例 docker-compose](#通过-docker-compose-部署) 中已经包含了 [HenryQW/mercury-parser-api](https://github.com/HenryQW/mercury-parser-api) 服务器。
+全文内容提取插件，配合单独的 Mercury Parser API 服务器使用。[样例 docker-compose](#通过-docker-compose-部署） 中已经包含了 [HenryQW/mercury-parser-api](https://github.com/HenryQW/mercury-parser-api) 服务器。
 
 #### 设置步骤
 
 1. 在设置中启用 `mercury-fulltext` 插件
    ![启用 Mercury](https://share.henry.wang/92AGp5/x9xYB93cnX+)
 1. 在设置中填入 Mercury Parser API 地址
-   ![填入 Mercury Parser API 地址](https://share.henry.wang/KFrzMD/O2xonuy9ta+)
+   ![填入 Mercury Parser API 地址](https://share.henry.wang/9HJemY/BlTnDhuUGC+)
+
+使用 Awesome-TTRSS 部署的 OpenCC 可填写`service.mercury:3000`。
+
+#### 全文提取按钮
+
+<img src="https://share.henry.wang/ubHtDz/uxyKk68jqY+" width="400">
 
 ### [Fever API](https://github.com/HenryQW/tinytinyrss-fever-plugin)
 
@@ -211,20 +244,24 @@ sameersbn/postgresql 已经完成了它的使命，pg_trgm 扩展已经不再需
 1. 在插件设置中设置 Fever 密码。
    ![设置 Fever 密码](https://share.henry.wang/HspODo/xRSbZQheVN+)
 1. 在支持 Fever 的阅读器用，使用 `https://[您的地址]/plugins/fever` 作为服务器地址。使用您的账号和步骤 2 中的密码登录。
-1. 由于该插件使用未加盐的 MD5 加密密码进行通信，强烈建议[开启 HTTPS](#配置-https)。
+1. 由于该插件使用未加盐的 MD5 加密密码进行通信，强烈建议 [开启 HTTPS](#配置-https)。
 
 ### [OpenCC 繁简转换](https://github.com/HenryQW/ttrss_opencc) <Badge text="arm32v7 ✗" vertical="top" type="error"/><Badge text="arm64v8 ✗" vertical="top" type="error"/>
 
-使用 [OpenCC](https://github.com/BYVoid/OpenCC) 为 TTRSS 提供中文繁转简的插件，需要配合单独的 OpenCC API 服务器使用。[样例 docker-compose](#通过-docker-compose-部署) 中已经包含了 [HenryQW/OpenCC.henry.wang](https://github.com/HenryQW/OpenCC.henry.wang) 服务器。
+使用 [OpenCC](https://github.com/BYVoid/OpenCC) 为 TTRSS 提供中文繁转简的插件，需要配合单独的 OpenCC API 服务器使用。[样例 docker-compose](#通过-docker-compose-部署） 中已经包含了 [HenryQW/OpenCC.henry.wang](https://github.com/HenryQW/OpenCC.henry.wang) 服务器。
 
 #### 设置步骤
 
 1. 在设置中启用 `opencc` 插件
    ![启用 opencc](https://share.henry.wang/EvN5Nl/2RHNnMV2iP+)
 1. 在设置中填入 OpenCC API 地址
-   ![填入 OpenCC API 地址](https://share.henry.wang/JdJeUB/vIsRBk3EXn+)
+   ![填入 OpenCC API 地址](https://share.henry.wang/pePHAz/oWXX3I18hW+)
 
-Demo 服务器，可用性不做任何保证：[https://opencc.henry.wang](https://opencc.henry.wang) or [http://opencc2.henry.wang](http://opencc2.henry.wang)。
+使用 Awesome-TTRSS 部署的 OpenCC 可填写`service.opencc:3000`。
+
+#### 转换按钮
+
+<img src="https://share.henry.wang/30kbTr/lSaHKXk5NT+" width="400">
 
 ### [FeedReader API](https://github.com/jangernert/FeedReader/tree/master/data/tt-rss-feedreader-plugin)
 
@@ -253,6 +290,12 @@ Demo 服务器，可用性不做任何保证：[https://opencc.henry.wang](https
 提供单独为源地址配置代理、user-agent 以及 SSL 证书验证的能力。
 
 使用指南见 [Options per Feed](https://github.com/sergey-dryabzhinsky/options_per_feed)。
+
+### [Wallabag v2](https://github.com/joshp23/ttrss-to-wallabag-v2)
+
+保存文章至 Wallabag。
+
+使用指南见 [Wallabag v2](https://github.com/joshp23/ttrss-to-wallabag-v2)。
 
 ### [Remove iframe sandbox](https://github.com/DIYgod/ttrss-plugin-remove-iframe-sandbox)
 
@@ -288,7 +331,7 @@ Demo 服务器，可用性不做任何保证：[https://opencc.henry.wang](https
 ## 支持与帮助
 
 - 通过 Awesome TTRSS 的 [💰OpenCollective 页面](https://opencollective.com/Awesome-TTRSS/) 进行赞助，即可获得私人定制支持。
-- 阅读此[指南](https://henry.wang/2018/04/25/ttrss-docker-plugins-guide.html)可能会有帮助。
+- 阅读此 [指南](https://henry.wang/2018/04/25/ttrss-docker-plugins-guide.html) 可能会有帮助。
 - 通过 [GitHub issue](https://github.com/HenryQW/Awesome-TTRSS/issues) 提交问题。
 - [直接捐助支持](https://tt-rss.org/)。
 
@@ -302,4 +345,4 @@ Demo 服务器，可用性不做任何保证：[https://opencc.henry.wang](https
 
 MIT
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHenryQW%2FAwesome TTRSS.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHenryQW%2FAwesome TTRSS?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHenryQW%2FAwesome-TTRSS.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHenryQW%2FAwesome-TTRSS?ref=badge_large)
