@@ -1,3 +1,5 @@
+# please note this is a legacy compose file archived to support sameersbn/postgresql, further changes will NOT be applied here.
+
 version: "3"
 services:
   database.postgres:
